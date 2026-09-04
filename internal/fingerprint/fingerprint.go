@@ -1,0 +1,55 @@
+package fingerprint
+
+import (
+	"errors"
+
+	"github.com/KoJaco/leakwatch/internal/profile"
+)
+
+// ErrNotImplemented is returned by stub implementations.
+var ErrNotImplemented = errors.New("fingerprint: not implemented")
+
+// Location is a human-readable attribution point for a leak.
+type Location struct {
+	Function string
+	File     string
+	Line     int
+}
+
+// Fingerprint is stable machine identity — not human-readable attribution.
+type Fingerprint struct {
+	ID  string // e.g. "7f31c2a9"
+	Key string // canonical representation used to generate ID
+}
+
+// LeakSite holds human-readable explanation for a fingerprint.
+type LeakSite struct {
+	Location Location
+	Stack    []profile.Frame
+}
+
+// LeakCluster groups goroutines sharing a fingerprint at a point in time.
+type LeakCluster struct {
+	Fingerprint Fingerprint
+	Site        LeakSite
+	Count       int
+}
+
+// Fingerprinter clusters a profile into leak clusters.
+type Fingerprinter interface {
+	Fingerprint(p profile.Profile) ([]LeakCluster, error)
+}
+
+// DefaultFingerprinter is the standard fingerprinting implementation.
+type DefaultFingerprinter struct{}
+
+// NewFingerprinter returns the default fingerprinter.
+func NewFingerprinter() *DefaultFingerprinter {
+	return &DefaultFingerprinter{}
+}
+
+// Fingerprint clusters goroutines in the profile.
+func (f *DefaultFingerprinter) Fingerprint(p profile.Profile) ([]LeakCluster, error) {
+	_ = p
+	return nil, ErrNotImplemented
+}

@@ -1,0 +1,28 @@
+{
+  "title": "Goroutine Leaks",
+  "uid": "leakwatch-goroutine-leaks",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "title": "Active Leak Clusters",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "goroutine_leak_clusters"
+        }
+      ],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 }
+    },
+    {
+      "title": "Leak Count by ID",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "goroutine_leak_count"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 }
+    }
+  ]
+}
