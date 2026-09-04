@@ -41,6 +41,36 @@ golangci-lint run
 
 ## Adding tests
 
-- Unit tests live alongside the package they test.
-- Golden fixtures go in `internal/fingerprint/testdata/`.
-- Integration leak generators go in `test/integration/`.
+Three layers — see [docs/architecture.md](docs/architecture.md#testing-strategy) for detail.
+
+### Unit tests
+
+- Live alongside the package they test (`*_test.go`).
+- Cover pure functions and components with synthetic or fixture data.
+- Run on every CI push: `go test -count=1 ./...`
+
+### Golden / fixture tests
+
+- Recorded `goroutineleak` profiles in `internal/fingerprint/testdata/`.
+- Assert expected cluster counts, IDs, and leak sites.
+- No live runtime required.
+
+### Integration leak generators
+
+- Programs in `test/integration/{basic,channels,nethttp,grpc}/` (build tag `integration`).
+- Intentionally leak goroutines for manual inspection and fixture recording.
+
+```sh
+go run -tags integration ./test/integration/basic
+```
+
+### End-to-end tests (planned)
+
+- Wire generators to a live `Watcher` and assert on `Snapshot()`.
+- Run in CI: `go test -tags integration -timeout 5m ./test/...`
+- See [docs/pr-checklist.md](docs/pr-checklist.md) phase 7.
+
+## Implementation PRs
+
+Follow the per-phase checklist in [docs/pr-checklist.md](docs/pr-checklist.md).
+Each implementation phase lands as a single focused PR in dependency order.

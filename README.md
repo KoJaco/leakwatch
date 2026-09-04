@@ -72,7 +72,14 @@ Scheduler → Observer.Sample()
 
 ## Documentation
 
-See [`docs/`](docs/) for architecture, sampling, fingerprinting, metrics, and limitations.
+| Doc | Topic |
+|-----|-------|
+| [architecture.md](docs/architecture.md) | Pipeline, package boundaries, implementation order, testing strategy |
+| [sampling.md](docs/sampling.md) | Scheduler, jitter, sample gate, GC impact |
+| [fingerprinting.md](docs/fingerprinting.md) | ID vs Key vs LeakSite, normalization, clustering |
+| [limitations.md](docs/limitations.md) | Runtime detector boundaries, metric interpretation |
+| [metrics.md](docs/metrics.md) | Prometheus metrics and query examples |
+| [pr-checklist.md](docs/pr-checklist.md) | Per-phase PR checklist for implementation |
 
 ## License
 
