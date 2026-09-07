@@ -63,16 +63,18 @@ func (s *PProfSource) Fetch(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		_ = resp.Body.Close()
 		return nil, fmt.Errorf("profile: pprof fetch %s: %s", s.URL, resp.Status)
 	}
 
-	data, err := io.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, err
+	data, readErr := io.ReadAll(resp.Body)
+	if closeErr := resp.Body.Close(); readErr == nil && closeErr != nil {
+		return nil, closeErr
+	}
+	if readErr != nil {
+		return nil, readErr
 	}
 
 	if len(data) == 0 {
