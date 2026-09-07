@@ -10,3 +10,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Initial project scaffold with domain model, pipeline packages, and stub implementations.
+- Goroutine leak profile fetch (`PProfSource`) and parse (`DefaultParser`) for Go 1.27 `goroutineleak` pprof profiles.
