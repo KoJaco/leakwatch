@@ -24,16 +24,16 @@ pipeline context.
 
 ### Deliverables
 
-- [ ] `PProfSource.Fetch` — HTTP GET with context cancellation
-- [ ] `DefaultParser.Parse` — protobuf `goroutineleak` profile → `profile.Profile`
-- [ ] Populate `Profile.CapturedAt` and `Goroutine.Stack` frames
-- [ ] Unit tests with recorded profile bytes (minimal fixture in `testdata/`)
+- [x] `PProfSource.Fetch` — HTTP GET with context cancellation
+- [x] `DefaultParser.Parse` — protobuf `goroutineleak` profile → `profile.Profile`
+- [x] Populate `Profile.CapturedAt` and `Goroutine.Stack` frames
+- [x] Unit tests with recorded profile bytes (minimal fixture in `testdata/`)
 
 ### Tests
 
-- [ ] `TestParser_*` — parse valid profile, empty profile, malformed input
-- [ ] `TestPProfSource_Fetch` — mock HTTP server (or httptest)
-- [ ] Remove `t.Skip("not implemented")` from `parser_test.go`
+- [x] `TestParser_*` — parse valid profile, empty profile, malformed input
+- [x] `TestPProfSource_Fetch` — mock HTTP server (or httptest)
+- [x] Remove `t.Skip("not implemented")` from `parser_test.go`
 
 ### Manual verification
 
