@@ -81,6 +81,28 @@ Exporters call `Watcher.Snapshot()`, which delegates to `Observer.Snapshot()`.
 Analysis is pure and recomputed on each read — there is no separate mutable
 leak registry.
 
+## Leak status
+
+`Analyze` returns only leaks **present in the latest observation**. Clusters
+that disappear are **resolved** — they are omitted from `Snapshot` and their
+Prometheus time series drop off on the next scrape.
+
+| Status | Meaning |
+|--------|---------|
+| `new` | First sample for this `leak_id` |
+| `growing` | Net count increase over `DefaultGrowthWindow` (30 minutes) |
+| `persistent` | Seen in ≥2 samples with stable count (zero growth rate) |
+| `recurring` | Present → absent for ≥1 sample → present again |
+| `resolved` | Not in latest observation (implicit; not emitted in `Snapshot`) |
+
+Classification priority (first match wins): `recurring` → `new` → `growing` →
+`persistent`.
+
+Growth rates are derived at query time via `GrowthFor(observations, leakID,
+window)` — not stored on `Leak`. `RankBySeverity` sorts active leaks for
+display and alerting using count, persistence, and growth over the default
+window.
+
 ## Package boundaries
 
 | Path | Visibility | Responsibility |

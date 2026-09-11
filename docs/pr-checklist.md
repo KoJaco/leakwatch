@@ -55,17 +55,17 @@ curl -o /tmp/leak.pb.gz http://localhost:6060/debug/pprof/goroutineleak
 
 ### Deliverables
 
-- [ ] `NormalizeStack` — documented rules from [fingerprinting.md](fingerprinting.md)
-- [ ] `ProjectStack` — application-frame projection
-- [ ] `ClusterGoroutines` — group by projected stack
-- [ ] `DefaultFingerprinter.Fingerprint` — orchestrate and assign ID/Key/Site
-- [ ] Remove `ErrNotImplemented` from fingerprinter
+- [x] `NormalizeStack` — documented rules from [fingerprinting.md](fingerprinting.md)
+- [x] `ProjectStack` — application-frame projection
+- [x] `ClusterGoroutines` — group by projected stack
+- [x] `DefaultFingerprinter.Fingerprint` — orchestrate and assign ID/Key/Site
+- [x] Remove `ErrNotImplemented` from fingerprinter
 
 ### Tests
 
-- [ ] `TestFingerprint_*` per fixture directory
+- [x] `TestFingerprint_*` per fixture directory (synthetic unit tests; golden `.pb.gz` deferred to phase 6)
 - [ ] Golden fixtures recorded in `internal/fingerprint/testdata/{channels,nethttp,grpc,workers}/`
-- [ ] Remove `t.Skip("not implemented")` from `fingerprint_test.go`
+- [x] Remove `t.Skip("not implemented")` from `fingerprint_test.go`
 
 ### Fixture recording
 
@@ -90,17 +90,17 @@ curl -o internal/fingerprint/testdata/channels/leak.pb.gz \
 
 ### Deliverables
 
-- [ ] `Analyze` — observations → `[]Leak` with status classification
-- [ ] `GrowthFor` — rate per minute/hour over configurable window
-- [ ] `DetectRecurrence` — disappear/reappear detection
-- [ ] `RankBySeverity` — sort by count × growth × persistence
-- [ ] Status transitions: `new`, `growing`, `persistent`, `recurring`, `resolved`
+- [x] `Analyze` — observations → `[]Leak` with status classification
+- [x] `GrowthFor` — rate per minute/hour over configurable window
+- [x] `DetectRecurrence` — disappear/reappear detection
+- [x] `RankBySeverity` — sort by count × growth × persistence
+- [x] Status transitions: `new`, `growing`, `persistent`, `recurring`, `resolved`
 
 ### Tests
 
-- [ ] Synthetic observation sequences (no runtime dependency)
-- [ ] `TestHistoryRecord` — ring buffer behaviour
-- [ ] Remove skips from `analysis_test.go`, `history_test.go`
+- [x] Synthetic observation sequences (no runtime dependency)
+- [x] `TestHistoryRecord` — ring buffer behaviour
+- [x] Remove skips from `analysis_test.go`, `history_test.go`
 
 ---
 
