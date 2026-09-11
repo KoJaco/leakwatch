@@ -77,20 +77,17 @@ topk(5, goroutine_leak_count)
 
 ### Growing leaks
 
-Once `goroutine_leak_growth_rate` is wired (phase 4), detect clusters with
-positive growth:
+Detect clusters with positive growth:
 
 ```promql
 goroutine_leak_growth_rate > 0
 ```
 
-Rate of total leaked goroutines increasing:
+Rate of total leaked goroutines increasing (alternative without growth rate):
 
 ```promql
 sum(goroutine_leak_count) - sum(goroutine_leak_count offset 30m) > 0
 ```
-
-This offset query works today without growth rate implementation.
 
 ### New leaks in the last hour
 
@@ -156,8 +153,8 @@ Used by the CLI and external tooling.
 |--------|--------|
 | `goroutine_leak_clusters` | Implemented |
 | `goroutine_leak_count` | Implemented |
-| `goroutine_leak_first_seen_timestamp` | Implemented (requires analysis phase 3) |
-| `goroutine_leak_growth_rate` | Stub — reports `0` until phase 4 |
+| `goroutine_leak_first_seen_timestamp` | Implemented |
+| `goroutine_leak_growth_rate` | Implemented |
 
 ## Related documentation
 

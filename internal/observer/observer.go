@@ -49,6 +49,11 @@ func (o *Observer) Leaks() []analysis.Leak {
 	return analysis.Analyze(o.history.Observations())
 }
 
+// Observations returns the retained observation history.
+func (o *Observer) Observations() []domain.Observation {
+	return o.history.Observations()
+}
+
 // Snapshot returns the current export-ready state.
 func (o *Observer) Snapshot() analysis.Snapshot {
 	leaks := o.Leaks()

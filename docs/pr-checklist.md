@@ -112,13 +112,13 @@ curl -o internal/fingerprint/testdata/channels/leak.pb.gz \
 
 ### Deliverables
 
-- [ ] Wire `goroutine_leak_growth_rate` from `GrowthFor` at scrape time
-- [ ] Pass observation history to collector (or expose via `SnapshotProvider`)
+- [x] Wire `goroutine_leak_growth_rate` from `GrowthFor` at scrape time
+- [x] Pass observation history to collector (or expose via `SnapshotProvider`)
 
 ### Tests
 
-- [ ] `collector_test.go` — assert non-zero growth rate with synthetic history
-- [ ] Verify metric values with `prometheus/testutil`
+- [x] `collector_test.go` — assert non-zero growth rate with synthetic history
+- [x] Verify metric values with `prometheus/testutil`
 
 ---
 
