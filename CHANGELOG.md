@@ -12,3 +12,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial project scaffold with domain model, pipeline packages, and stub implementations.
 - Goroutine leak profile fetch (`PProfSource`) and parse (`DefaultParser`) for Go 1.27 `goroutineleak` pprof profiles.
 - Stack fingerprinting: normalization, projection, clustering, and stable `leak_id` generation from goroutine stacks.
+- Temporal analysis: `Analyze` interprets observation history into export-ready leaks with status classification (`new`, `growing`, `persistent`, `recurring`), plus `GrowthFor`, `DetectRecurrence`, and `RankBySeverity` helpers.
