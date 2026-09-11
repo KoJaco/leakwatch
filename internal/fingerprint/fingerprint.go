@@ -1,13 +1,8 @@
 package fingerprint
 
 import (
-	"errors"
-
 	"github.com/KoJaco/leakwatch/internal/profile"
 )
-
-// ErrNotImplemented is returned by stub implementations.
-var ErrNotImplemented = errors.New("fingerprint: not implemented")
 
 // Location is a human-readable attribution point for a leak.
 type Location struct {
@@ -50,6 +45,8 @@ func NewFingerprinter() *DefaultFingerprinter {
 
 // Fingerprint clusters goroutines in the profile.
 func (f *DefaultFingerprinter) Fingerprint(p profile.Profile) ([]LeakCluster, error) {
-	_ = p
-	return nil, ErrNotImplemented
+	if len(p.Goroutines) == 0 {
+		return nil, nil
+	}
+	return ClusterGoroutines(p.Goroutines), nil
 }
