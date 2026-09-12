@@ -1,0 +1,13 @@
+{
+  "clusters": [
+    {
+      "id": "27e9f2e8",
+      "count": 40,
+      "location": {
+        "function": "main.workerLoop",
+        "file": "main.go",
+        "line": 14
+      }
+    }
+  ]
+}

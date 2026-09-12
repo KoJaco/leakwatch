@@ -1,0 +1,13 @@
+{
+  "clusters": [
+    {
+      "id": "6760f943",
+      "count": 8,
+      "location": {
+        "function": "google.golang.org/grpc.(*Server).handleStream",
+        "file": "server.go",
+        "line": 100
+      }
+    }
+  ]
+}
