@@ -16,3 +16,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prometheus growth metric: `goroutine_leak_growth_rate` derived from observation history at scrape time via `GrowthFor`.
 - CLI: `leakwatch analyze` (offline profile) and `leakwatch inspect` (live pprof URL) with optional `-json` output.
 - Golden fixtures: committed `leak.pb.gz` and `clusters.json` for channels, nethttp, grpc (synthetic), and workers leak patterns; offline golden tests in `internal/fingerprint` and `internal/profile`.
+- E2E integration tests: `test/e2e/` with live leak generators, Watcher assertions, and CI job (`-tags integration`); real gRPC generator added.

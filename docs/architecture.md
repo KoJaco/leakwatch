@@ -181,7 +181,7 @@ go run -tags integration ./test/integration/basic
 These are **generators**, not assertions. They exist to produce realistic leak
 profiles for fixture recording and manual inspection.
 
-### End-to-end tests (planned)
+### End-to-end tests
 
 Wire integration generators to leakwatch in CI:
 
@@ -191,12 +191,10 @@ Wire integration generators to leakwatch in CI:
 4. Assert on `Snapshot()`: cluster count, `leak_id` stability across samples,
    status transitions, and growth direction.
 
-E2E tests belong in `test/integration/` or a top-level `test/e2e/` package
-with the `integration` build tag. They depend on phases 1–3 being complete and
-should be added in phase 7 of the implementation order.
+E2E tests live in [`test/e2e/`](../test/e2e/) with the `integration` build tag.
+They spawn generators as subprocesses and run under CI:
 
 ```sh
-# Planned CI invocation
 go test -tags integration -count=1 -timeout 5m ./test/...
 ```
 

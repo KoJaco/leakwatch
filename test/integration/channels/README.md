@@ -8,7 +8,13 @@ Channel leak generator for integration testing and golden fixture recording.
 go run -tags integration ./test/integration/channels
 ```
 
-Starts pprof on `http://127.0.0.1:6060/debug/pprof/goroutineleak`.
+Starts pprof on `LEAKWATCH_PPROF_ADDR` (default `:6060`).
+
+## Environment
+
+| Variable | Default |
+|----------|---------|
+| `LEAKWATCH_PPROF_ADDR` | `:6060` |
 
 ## Record fixture
 

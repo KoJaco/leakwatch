@@ -8,6 +8,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"time"
+
+	"github.com/KoJaco/leakwatch/test/integration/envutil"
 )
 
 func workerLoop(ch <-chan struct{}) {
@@ -20,9 +22,10 @@ func main() {
 		go workerLoop(ch)
 	}
 
+	pprofAddr := envutil.Or("LEAKWATCH_PPROF_ADDR", ":6060")
 	go func() {
-		fmt.Println("workers leak generator: pprof on :6060")
-		_ = http.ListenAndServe(":6060", nil)
+		fmt.Printf("workers leak generator: pprof on %s\n", pprofAddr)
+		_ = http.ListenAndServe(pprofAddr, nil)
 	}()
 
 	time.Sleep(time.Hour)
