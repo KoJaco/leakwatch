@@ -174,11 +174,11 @@ go run ./cmd/leakwatch inspect http://localhost:6060/debug/pprof/goroutineleak
 
 ### Deliverables
 
-- [ ] E2E test harness: start leak generator + pprof server in test
-- [ ] Create `Watcher` pointed at test server
-- [ ] Sample until expected clusters appear (with timeout)
-- [ ] Assert: cluster count, `leak_id` stability, status, growth direction
-- [ ] CI job runs `go test -tags integration -timeout 5m ./test/...`
+- [x] E2E test harness: start leak generator + pprof server in test
+- [x] Create `Watcher` pointed at test server
+- [x] Sample until expected clusters appear (with timeout)
+- [x] Assert: cluster count, `leak_id` stability, status, growth direction
+- [x] CI job runs `go test -tags integration -timeout 5m ./test/...`
 
 ### Test matrix
 

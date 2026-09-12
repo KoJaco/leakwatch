@@ -8,7 +8,15 @@ HTTP handler leak generator for integration testing and golden fixture recording
 go run -tags integration ./test/integration/nethttp
 ```
 
-App listens on `:8080`. pprof on `http://127.0.0.1:6060/debug/pprof/goroutineleak`.
+App listens on `LEAKWATCH_HTTP_ADDR` (default `:8080`). pprof on
+`LEAKWATCH_PPROF_ADDR` (default `:6060`).
+
+## Environment
+
+| Variable | Default |
+|----------|---------|
+| `LEAKWATCH_HTTP_ADDR` | `:8080` |
+| `LEAKWATCH_PPROF_ADDR` | `:6060` |
 
 ## Record fixture
 

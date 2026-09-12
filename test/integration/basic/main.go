@@ -5,7 +5,11 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"time"
+
+	"github.com/KoJaco/leakwatch/test/integration/envutil"
 )
 
 func main() {
@@ -15,6 +19,13 @@ func main() {
 			<-ch
 		}()
 	}
+
+	pprofAddr := envutil.Or("LEAKWATCH_PPROF_ADDR", ":6060")
+	go func() {
+		fmt.Printf("basic leak generator: pprof on %s\n", pprofAddr)
+		_ = http.ListenAndServe(pprofAddr, nil)
+	}()
+
 	fmt.Println("basic leak generator running")
 	time.Sleep(time.Hour)
 }
