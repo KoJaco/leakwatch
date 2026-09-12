@@ -2,12 +2,14 @@ package promexport
 
 import (
 	"github.com/KoJaco/leakwatch/internal/analysis"
+	"github.com/KoJaco/leakwatch/internal/domain"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// SnapshotProvider supplies the current leak snapshot for metric export.
+// SnapshotProvider supplies the current leak snapshot and observation history for metric export.
 type SnapshotProvider interface {
 	Snapshot() analysis.Snapshot
+	Observations() []domain.Observation
 }
 
 var (
@@ -54,6 +56,7 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 // Collect implements prometheus.Collector.
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	snap := c.provider.Snapshot()
+	observations := c.provider.Observations()
 
 	ch <- prometheus.MustNewConstMetric(
 		leakClustersDesc,
@@ -76,11 +79,11 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 				leak.ID,
 			)
 		}
-		// Growth rate populated via GrowthFor at scrape time once history is wired.
+		growth := analysis.GrowthFor(observations, leak.ID, analysis.DefaultGrowthWindow)
 		ch <- prometheus.MustNewConstMetric(
 			leakGrowthRateDesc,
 			prometheus.GaugeValue,
-			0,
+			growth.RatePerMinute,
 			leak.ID,
 		)
 	}

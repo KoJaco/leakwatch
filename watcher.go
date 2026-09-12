@@ -7,8 +7,10 @@ import (
 	"time"
 
 	httpexport "github.com/KoJaco/leakwatch/export/http"
+	promexport "github.com/KoJaco/leakwatch/export/prometheus"
 	"github.com/KoJaco/leakwatch/internal/analysis"
 	"github.com/KoJaco/leakwatch/internal/collector"
+	"github.com/KoJaco/leakwatch/internal/domain"
 	"github.com/KoJaco/leakwatch/internal/fingerprint"
 	"github.com/KoJaco/leakwatch/internal/observer"
 	"github.com/KoJaco/leakwatch/internal/profile"
@@ -85,10 +87,18 @@ func (w *Watcher) Snapshot() analysis.Snapshot {
 	return w.observer.Snapshot()
 }
 
+// Observations returns the retained observation history.
+func (w *Watcher) Observations() []domain.Observation {
+	return w.observer.Observations()
+}
+
 // ServeDebug registers leak debug handlers on http.DefaultServeMux at path.
 func (w *Watcher) ServeDebug(path string) error {
 	httpexport.Register(stdhttp.DefaultServeMux, path, w)
 	return nil
 }
 
-var _ httpexport.SnapshotProvider = (*Watcher)(nil)
+var (
+	_ httpexport.SnapshotProvider = (*Watcher)(nil)
+	_ promexport.SnapshotProvider = (*Watcher)(nil)
+)

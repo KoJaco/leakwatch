@@ -116,8 +116,8 @@ unless history is also reset.
 
 ### `goroutine_leak_growth_rate{leak_id}`
 
-Derived at scrape time from observation history. Until analysis is implemented,
-this metric reports `0`. When wired:
+Derived at scrape time from observation history via `GrowthFor` over the
+default 30-minute window:
 
 - Positive rate → goroutines in this cluster are increasing between samples.
 - Zero rate → stable count (persistent leak) or insufficient history.
