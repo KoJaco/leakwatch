@@ -64,7 +64,7 @@ curl -o /tmp/leak.pb.gz http://localhost:6060/debug/pprof/goroutineleak
 ### Tests
 
 - [x] `TestFingerprint_*` per fixture directory (synthetic unit tests; golden `.pb.gz` deferred to phase 6)
-- [ ] Golden fixtures recorded in `internal/fingerprint/testdata/{channels,nethttp,grpc,workers}/`
+- [x] Golden fixtures recorded in `internal/fingerprint/testdata/{channels,nethttp,grpc,workers}/`
 - [x] Remove `t.Skip("not implemented")` from `fingerprint_test.go`
 
 ### Fixture recording
@@ -155,14 +155,14 @@ go run ./cmd/leakwatch inspect http://localhost:6060/debug/pprof/goroutineleak
 
 ### Deliverables
 
-- [ ] Fixtures for all four patterns: channels, nethttp, grpc, workers
-- [ ] CI runs golden tests (no `integration` tag required)
-- [ ] README in each `testdata/` subdirectory documenting how the fixture was recorded
+- [x] Fixtures for all four patterns: channels, nethttp, grpc, workers
+- [x] CI runs golden tests (no `integration` tag required)
+- [x] README in each `testdata/` subdirectory documenting how the fixture was recorded
 
 ### Tests
 
-- [ ] `go test ./internal/fingerprint/...` passes with fixtures
-- [ ] `go test ./internal/profile/...` passes with fixtures
+- [x] `go test ./internal/fingerprint/...` passes with fixtures
+- [x] `go test ./internal/profile/...` passes with fixtures
 
 ---
 

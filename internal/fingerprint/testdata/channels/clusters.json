@@ -1,0 +1,13 @@
+{
+  "clusters": [
+    {
+      "id": "a7db680f",
+      "count": 50,
+      "location": {
+        "function": "main.main.func1",
+        "file": "main.go",
+        "line": 17
+      }
+    }
+  ]
+}

@@ -62,9 +62,9 @@ Implemented in `internal/fingerprint/`:
 
 | Function | File | Status |
 |----------|------|--------|
-| `NormalizeStack` | `normalize.go` | Stub |
-| `ProjectStack` | `projection.go` | Stub |
-| `ClusterGoroutines` | `cluster.go` | Stub |
+| `NormalizeStack` | `normalize.go` | Implemented |
+| `ProjectStack` | `projection.go` | Implemented |
+| `ClusterGoroutines` | `cluster.go` | Implemented |
 | `Fingerprinter.Fingerprint` | `fingerprint.go` | Orchestrates the above |
 
 ## Normalization
@@ -153,9 +153,10 @@ Each subdirectory under `internal/fingerprint/testdata/` holds recorded
 | `grpc/` | gRPC handler/worker leak |
 | `workers/` | Worker pool goroutine leak |
 
-Fixtures are recorded from `test/integration/` generators. Tests assert expected
-cluster count, IDs, and leak sites. Recording workflow is documented in
-[pr-checklist.md](pr-checklist.md) phase 6.
+Fixtures are recorded from `test/integration/` generators (or synthesized for
+`grpc/` until phase 7). Golden tests in `golden_test.go` and
+`internal/profile/golden_test.go` assert expected cluster count, IDs, and leak
+sites. Regenerate with `WRITE_GOLDEN=1 go test ./internal/fingerprint -run TestWriteGoldenFixtures`.
 
 ## Related documentation
 

@@ -1,12 +1,12 @@
 //go:build integration
 
-// HTTP handler leak generator placeholder.
+// HTTP handler leak generator for golden fixture recording.
 package main
 
 import (
 	"fmt"
 	"net/http"
-	"time"
+	_ "net/http/pprof"
 )
 
 func main() {
@@ -17,6 +17,12 @@ func main() {
 		}()
 		fmt.Fprintln(w, "ok")
 	})
-	fmt.Println("nethttp leak generator on :8080")
+
+	go func() {
+		fmt.Println("nethttp leak generator: app on :8080, pprof on :6060")
+		_ = http.ListenAndServe(":6060", nil)
+	}()
+
+	fmt.Println("nethttp leak generator listening on :8080")
 	_ = http.ListenAndServe(":8080", nil)
 }
