@@ -130,19 +130,19 @@ curl -o internal/fingerprint/testdata/channels/leak.pb.gz \
 
 ### Deliverables
 
-- [ ] `leakwatch analyze <profile.pb.gz>` — offline analysis, human-readable output
-- [ ] `leakwatch inspect <pprof-url>` — fetch + analyze live endpoint
-- [ ] Shared pipeline code with library (no duplicated logic)
+- [x] `leakwatch analyze <profile.pb.gz>` — offline analysis, human-readable output
+- [x] `leakwatch inspect <pprof-url>` — fetch + analyze live endpoint
+- [x] Shared pipeline code with library (no duplicated logic)
 
 ### Tests
 
-- [ ] CLI integration test with fixture profile file
-- [ ] Exit codes: 0 on success, 1 on error
+- [x] CLI integration test with fixture profile file
+- [x] Exit codes: 0 on success, 1 on error
 
 ### Manual verification
 
 ```sh
-go run ./cmd/leakwatch analyze internal/fingerprint/testdata/channels/leak.pb.gz
+go run ./cmd/leakwatch analyze cmd/leakwatch/testdata/leak.pb
 go run ./cmd/leakwatch inspect http://localhost:6060/debug/pprof/goroutineleak
 ```
 

@@ -118,6 +118,7 @@ window.
 | `internal/observer` | Private | Sample orchestration, history |
 | `internal/domain` | Private | `Observation` type |
 | `internal/analysis` | Private | Pure leak interpretation |
+| `internal/pipeline` | Private | Point-in-time profile → snapshot (CLI) |
 | `cmd/leakwatch` | Binary | CLI (`analyze`, `inspect`, `version`) |
 
 **Do not import `internal/` from outside this module.** The CLI is the only
