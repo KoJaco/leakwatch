@@ -1,10 +1,8 @@
 # leakwatch
 
 Library-first goroutine leak detection for Go 1.27+, built on the runtime's
-goroutine leak profile. A thin CLI supports offline analysis of exported profiles.
-
-**Status:** skeleton — core pipeline structure is in place; parsing, fingerprinting,
-and analysis are not yet implemented.
+goroutine leak profile. A thin CLI supports offline analysis of exported profiles
+and live pprof inspection.
 
 ## Requirements
 
@@ -45,8 +43,12 @@ func main() {
 # Analyze an exported goroutine leak profile offline
 leakwatch analyze profile.pb.gz
 
+# JSON output
+leakwatch analyze -json profile.pb.gz
+
 # Fetch and inspect a live pprof endpoint
 leakwatch inspect http://localhost:6060/debug/pprof/goroutineleak
+leakwatch inspect -json http://localhost:6060/debug/pprof/goroutineleak
 ```
 
 ## Pipeline

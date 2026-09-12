@@ -14,3 +14,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stack fingerprinting: normalization, projection, clustering, and stable `leak_id` generation from goroutine stacks.
 - Temporal analysis: `Analyze` interprets observation history into export-ready leaks with status classification (`new`, `growing`, `persistent`, `recurring`), plus `GrowthFor`, `DetectRecurrence`, and `RankBySeverity` helpers.
 - Prometheus growth metric: `goroutine_leak_growth_rate` derived from observation history at scrape time via `GrowthFor`.
+- CLI: `leakwatch analyze` (offline profile) and `leakwatch inspect` (live pprof URL) with optional `-json` output.
