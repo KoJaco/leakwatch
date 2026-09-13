@@ -15,7 +15,7 @@ Recorded from [`test/integration/channels`](../../../test/integration/channels/m
 
 ## Expected cluster
 
-- **ID:** `a7db680f`
+- **ID:** `1f246299e3674466`
 - **Count:** 50
 - **Location:** `main.main.func1` in `main.go:17`
 

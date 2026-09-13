@@ -13,11 +13,13 @@ Golden fixture for gRPC-style handler stack frames.
 
 **Synthetic** — built by `TestWriteSyntheticFixtures` in `golden_test.go` using
 gRPC-like stack frames (`google.golang.org/grpc.(*Server).handleStream`, etc.).
-A live gRPC integration generator is deferred to phase 7.
+
+A live gRPC leak generator lives in [`test/integration/grpc`](../../../test/integration/grpc/main.go)
+and is exercised by [`test/e2e/e2e_test.go`](../../../test/e2e/e2e_test.go).
 
 ## Expected cluster
 
-- **ID:** `6760f943`
+- **ID:** `e3a195b8d37bc2d4`
 - **Count:** 8
 - **Location:** `google.golang.org/grpc.(*Server).handleStream` in `server.go:100`
 
