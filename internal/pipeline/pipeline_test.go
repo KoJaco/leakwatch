@@ -49,8 +49,8 @@ func TestProfileFromURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ProfileFromURL: %v", err)
 	}
-	if len(prof.Goroutines) != 2 {
-		t.Fatalf("len(goroutines) = %d, want 2", len(prof.Goroutines))
+	if prof.TotalCount() != 2 {
+		t.Fatalf("total count = %d, want 2", prof.TotalCount())
 	}
 }
 

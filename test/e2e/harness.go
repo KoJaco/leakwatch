@@ -159,7 +159,7 @@ func waitForProfileGoroutines(t *testing.T, url string, timeout time.Duration) {
 			continue
 		}
 		prof, err := parser.Parse(data)
-		if err == nil && len(prof.Goroutines) > 0 {
+		if err == nil && prof.TotalCount() > 0 {
 			return
 		}
 		time.Sleep(200 * time.Millisecond)

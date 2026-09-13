@@ -3,7 +3,11 @@ version: "2"
 linters:
   default: none
   enable:
+    - bodyclose
+    - copyloopvar
     - errcheck
+    - gocritic
     - govet
+    - misspell
     - staticcheck
     - unused

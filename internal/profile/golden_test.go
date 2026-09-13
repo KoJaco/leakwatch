@@ -20,7 +20,7 @@ func TestParseGoldenFixtures(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Parse: %v", err)
 			}
-			if len(prof.Goroutines) == 0 {
+			if prof.TotalCount() == 0 {
 				t.Fatal("expected goroutines in golden fixture")
 			}
 			if prof.CapturedAt.IsZero() {

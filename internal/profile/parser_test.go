@@ -6,16 +6,13 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	pprof "github.com/google/pprof/profile"
 )
 
-// --- helpers ---
-
-// writeProfile serializes a pprof.Profile the same way the runtime would
-// (protobuf, optionally gzip — Write handles both).
 func writeProfile(t *testing.T, prof *pprof.Profile) []byte {
 	t.Helper()
 	var buf bytes.Buffer
@@ -25,7 +22,6 @@ func writeProfile(t *testing.T, prof *pprof.Profile) []byte {
 	return buf.Bytes()
 }
 
-// sampleProfile builds a minimal goroutineleak-style count profile for tests.
 func sampleProfile(count int64, fn string, file string, line int64) *pprof.Profile {
 	fnObj := &pprof.Function{
 		ID:       1,
@@ -51,8 +47,6 @@ func sampleProfile(count int64, fn string, file string, line int64) *pprof.Profi
 	}
 }
 
-// --- Parse tests ---
-
 func TestSampleCount(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -76,35 +70,32 @@ func TestSampleCount(t *testing.T) {
 	}
 }
 
-func TestParser_expandsSampleCount(t *testing.T) {
-	// One sample says "3 goroutines with this stack" → 3 Goroutine entries.
+func TestParser_sampleCountWeighted(t *testing.T) {
 	data := writeProfile(t, sampleProfile(3, "main.leak", "main.go", 42))
 
 	got, err := NewParser().Parse(data)
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
-	if len(got.Goroutines) != 3 {
-		t.Fatalf("goroutine count: got %d, want 3", len(got.Goroutines))
+	if got.TotalCount() != 3 {
+		t.Fatalf("total count: got %d, want 3", got.TotalCount())
 	}
-	for _, g := range got.Goroutines {
-		if len(g.Stack) != 1 {
-			t.Fatalf("stack depth: got %d, want 1", len(g.Stack))
-		}
-		if g.Stack[0].Function != "main.leak" {
-			t.Fatalf("function: got %q, want main.leak", g.Stack[0].Function)
-		}
-		if g.Stack[0].File != "main.go" {
-			t.Fatalf("file: got %q, want main.go", g.Stack[0].File)
-		}
-		if g.Stack[0].Line != 42 {
-			t.Fatalf("line: got %d, want 42", g.Stack[0].Line)
-		}
+	if len(got.Samples) != 1 {
+		t.Fatalf("samples: got %d, want 1", len(got.Samples))
+	}
+	if got.Samples[0].Count != 3 {
+		t.Fatalf("sample count: got %d, want 3", got.Samples[0].Count)
+	}
+	stack := got.Samples[0].Stack
+	if len(stack) != 1 {
+		t.Fatalf("stack depth: got %d, want 1", len(stack))
+	}
+	if stack[0].Function != "main.leak" {
+		t.Fatalf("function: got %q, want main.leak", stack[0].Function)
 	}
 }
 
 func TestParser_emptyProfile(t *testing.T) {
-	// Valid profile with no samples = no leaks reported.
 	prof := &pprof.Profile{
 		SampleType: []*pprof.ValueType{{Type: "goroutineleak", Unit: "count"}},
 	}
@@ -112,8 +103,8 @@ func TestParser_emptyProfile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
-	if len(got.Goroutines) != 0 {
-		t.Fatalf("goroutines: got %d, want 0", len(got.Goroutines))
+	if got.TotalCount() != 0 {
+		t.Fatalf("total count: got %d, want 0", got.TotalCount())
 	}
 }
 
@@ -138,9 +129,16 @@ func TestParser_skipsZeroAndNegativeSampleCounts(t *testing.T) {
 		},
 	}
 
-	got := goroutinesFromProfile(prof)
-	if len(got) != 2 {
-		t.Fatalf("goroutines: got %d, want 2", len(got))
+	samples, err := samplesFromProfile(prof, DefaultMaxSampleCount, DefaultMaxTotalCount)
+	if err != nil {
+		t.Fatalf("samplesFromProfile: %v", err)
+	}
+	total := 0
+	for _, s := range samples {
+		total += s.Count
+	}
+	if total != 2 {
+		t.Fatalf("total: got %d, want 2", total)
 	}
 }
 
@@ -171,6 +169,25 @@ func TestParser_emptyInput(t *testing.T) {
 	}
 }
 
+func TestParser_wrongProfileType(t *testing.T) {
+	prof := &pprof.Profile{
+		SampleType: []*pprof.ValueType{{Type: "alloc_space", Unit: "bytes"}},
+	}
+	_, err := NewParser().Parse(writeProfile(t, prof))
+	if !errors.Is(err, ErrWrongProfileType) {
+		t.Fatalf("error: got %v, want ErrWrongProfileType", err)
+	}
+}
+
+func TestParser_oversizedSampleCount(t *testing.T) {
+	parser := &DefaultParser{MaxSampleCount: 10, MaxTotalCount: 100}
+	data := writeProfile(t, sampleProfile(11, "main.leak", "main.go", 1))
+	_, err := parser.Parse(data)
+	if !errors.Is(err, ErrProfileTooLarge) {
+		t.Fatalf("error: got %v, want ErrProfileTooLarge", err)
+	}
+}
+
 func TestParser_inlineFrames(t *testing.T) {
 	inlinee := &pprof.Function{ID: 1, Name: "inlinee", Filename: "a.go"}
 	caller := &pprof.Function{ID: 2, Name: "caller", Filename: "b.go"}
@@ -195,10 +212,10 @@ func TestParser_inlineFrames(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
-	if len(got.Goroutines) != 1 {
-		t.Fatalf("goroutines: got %d, want 1", len(got.Goroutines))
+	if len(got.Samples) != 1 {
+		t.Fatalf("samples: got %d, want 1", len(got.Samples))
 	}
-	stack := got.Goroutines[0].Stack
+	stack := got.Samples[0].Stack
 	if len(stack) != 2 {
 		t.Fatalf("stack depth: got %d, want 2", len(stack))
 	}
@@ -206,8 +223,6 @@ func TestParser_inlineFrames(t *testing.T) {
 		t.Fatalf("unexpected stack: %+v", stack)
 	}
 }
-
-// --- Fetch tests ---
 
 func TestPProfSource_Fetch_success(t *testing.T) {
 	fixture := writeProfile(t, sampleProfile(1, "main.leak", "main.go", 1))
@@ -261,5 +276,40 @@ func TestPProfSource_Fetch_cancelledContext(t *testing.T) {
 	_, err := src.Fetch(ctx)
 	if err == nil {
 		t.Fatal("expected error for cancelled context")
+	}
+}
+
+func TestPProfSource_Fetch_responseTooLarge(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(strings.Repeat("x", 32)))
+	}))
+	defer srv.Close()
+
+	src := NewPProfSource(srv.URL,
+		WithSourceHTTPClient(srv.Client()),
+		WithSourceMaxProfileBytes(16),
+	)
+	_, err := src.Fetch(context.Background())
+	if !errors.Is(err, ErrProfileTooLarge) {
+		t.Fatalf("error: got %v, want ErrProfileTooLarge", err)
+	}
+}
+
+func TestIsLocalhostURL(t *testing.T) {
+	cases := []struct {
+		url  string
+		want bool
+	}{
+		{"http://127.0.0.1:6060/debug/pprof/goroutineleak", true},
+		{"http://localhost:6060/debug/pprof/goroutineleak", true},
+		{"http://[::1]:6060/debug/pprof/goroutineleak", true},
+		{"http://example.com/debug/pprof/goroutineleak", false},
+		{"not-a-url", false},
+	}
+	for _, tc := range cases {
+		if got := IsLocalhostURL(tc.url); got != tc.want {
+			t.Fatalf("IsLocalhostURL(%q) = %v, want %v", tc.url, got, tc.want)
+		}
 	}
 }

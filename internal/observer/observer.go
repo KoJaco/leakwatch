@@ -38,8 +38,13 @@ func (o *Observer) Sample(ctx context.Context) error {
 		return err
 	}
 
+	capturedAt := prof.CapturedAt
+	if capturedAt.IsZero() {
+		capturedAt = time.Now().UTC()
+	}
+
 	return o.history.Record(domain.Observation{
-		CapturedAt: time.Now().UTC(),
+		CapturedAt: capturedAt,
 		Clusters:   clusters,
 	})
 }

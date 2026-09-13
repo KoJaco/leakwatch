@@ -8,7 +8,7 @@ import (
 )
 
 func runAnalyze(args []string) int {
-	positional, jsonOut, err := parseFlags(args)
+	positional, flags, err := parseFlags(args)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
@@ -30,7 +30,7 @@ func runAnalyze(args []string) int {
 		return 1
 	}
 
-	if err := writeSnapshot(os.Stdout, snap, jsonOut); err != nil {
+	if err := writeSnapshot(os.Stdout, snap, flags.jsonOut); err != nil {
 		fmt.Fprintf(os.Stderr, "leakwatch analyze: %v\n", err)
 		return 1
 	}

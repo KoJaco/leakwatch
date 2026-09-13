@@ -29,8 +29,8 @@ func usage() {
 	fmt.Fprintf(os.Stderr, `Usage: leakwatch <command> [arguments]
 
 Commands:
-  analyze [-json] <profile.pb.gz>   Analyze an exported goroutine leak profile
-  inspect [-json] <pprof-url>       Fetch and inspect a live pprof endpoint
-  version                           Print version information
+  analyze [-json] <profile.pb.gz>                 Analyze an exported goroutine leak profile
+  inspect [-json] [--allow-remote] <pprof-url>    Fetch and inspect a live pprof endpoint
+  version                                         Print version information
 `)
 }

@@ -75,8 +75,12 @@ at default sampling rates.
 
 ## leak_id generation
 
-`leak_id` is the `fingerprint.Fingerprint.ID` — a hash of the canonical stack
-key after normalization and projection. See [fingerprinting.md](fingerprinting.md).
+`leak_id` is the `fingerprint.Fingerprint.ID` — the first 16 hex characters of
+SHA-256 over the canonical stack key after normalization and projection. See
+[fingerprinting.md](fingerprinting.md).
+
+The active normalization version is exposed as `goroutine_leak_fingerprint_version`
+(currently `1`). Increment this when normalization rules change incompatibly.
 
 ### Properties
 

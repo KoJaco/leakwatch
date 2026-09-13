@@ -16,6 +16,25 @@ type SnapshotProvider interface {
 	Snapshot() analysis.Snapshot
 }
 
+// Middleware wraps a leak debug handler. Use for auth, IP allowlists, or other
+// protection before exposing stack traces.
+type Middleware func(http.Handler) http.Handler
+
+// RegisterOption configures Register.
+type RegisterOption func(*registerConfig)
+
+type registerConfig struct {
+	middleware []Middleware
+}
+
+// WithMiddleware wraps the leak debug handler with the given middleware chain.
+// Middleware is applied in order; the first middleware is outermost.
+func WithMiddleware(mw ...Middleware) RegisterOption {
+	return func(cfg *registerConfig) {
+		cfg.middleware = append(cfg.middleware, mw...)
+	}
+}
+
 // Handler serves leak debug endpoints.
 type Handler struct {
 	Provider SnapshotProvider
@@ -26,13 +45,32 @@ type Handler struct {
 //
 //   - GET {prefix}         — list all leaks
 //   - GET {prefix}/{id}    — leak detail
-func Register(mux *http.ServeMux, prefix string, provider SnapshotProvider) {
+//
+// Responses include full stack traces. Bind to loopback or wrap with middleware
+// (see WithMiddleware) before exposing on a shared HTTP server.
+func Register(mux *http.ServeMux, prefix string, provider SnapshotProvider, opts ...RegisterOption) {
+	cfg := registerConfig{}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	h := &Handler{Provider: provider, Prefix: prefix}
-	mux.Handle(prefix, h)
-	mux.Handle(prefix+"/", h)
+	handler := http.Handler(h)
+	for i := len(cfg.middleware) - 1; i >= 0; i-- {
+		handler = cfg.middleware[i](handler)
+	}
+
+	mux.Handle(prefix, handler)
+	mux.Handle(prefix+"/", handler)
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	snap := h.Provider.Snapshot()
 
 	rel := strings.TrimPrefix(r.URL.Path, h.Prefix)

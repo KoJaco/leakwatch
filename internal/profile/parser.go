@@ -17,8 +17,11 @@ var (
 	ErrEmptyURL = errors.New("profile: empty pprof URL")
 	// ErrInvalidProfile is returned when profile bytes cannot be parsed.
 	ErrInvalidProfile = errors.New("profile: invalid profile")
+	// ErrProfileTooLarge is returned when profile bytes or counts exceed limits.
+	ErrProfileTooLarge = errors.New("profile: profile too large")
+	// ErrWrongProfileType is returned when the profile is not goroutineleak.
+	ErrWrongProfileType = errors.New("profile: expected goroutineleak sample type")
 )
-
 
 // Source fetches raw profile bytes from an arbitrary origin.
 type Source interface {
@@ -32,20 +35,49 @@ type Parser interface {
 
 // PProfSource fetches a goroutine leak profile from a pprof HTTP endpoint.
 type PProfSource struct {
-	URL    string
-	Client *http.Client // optional; defaults to http.DefaultClient
+	URL             string
+	Client          *http.Client // optional; defaults to client with DefaultHTTPTimeout
+	MaxProfileBytes int64        // 0 = DefaultMaxProfileBytes
+}
+
+// SourceOption configures a PProfSource.
+type SourceOption func(*PProfSource)
+
+// WithSourceHTTPClient sets the HTTP client used for fetches.
+func WithSourceHTTPClient(c *http.Client) SourceOption {
+	return func(s *PProfSource) {
+		s.Client = c
+	}
+}
+
+// WithSourceMaxProfileBytes sets the maximum response body size.
+func WithSourceMaxProfileBytes(n int64) SourceOption {
+	return func(s *PProfSource) {
+		s.MaxProfileBytes = n
+	}
 }
 
 // NewPProfSource returns a Source that fetches from url.
-func NewPProfSource(url string) *PProfSource {
-	return &PProfSource{URL: url}
+func NewPProfSource(url string, opts ...SourceOption) *PProfSource {
+	s := &PProfSource{URL: url}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
+}
+
+func (s *PProfSource) maxProfileBytes() int64 {
+	if s.MaxProfileBytes > 0 {
+		return s.MaxProfileBytes
+	}
+	return DefaultMaxProfileBytes
 }
 
 func (s *PProfSource) httpClient() *http.Client {
 	if s.Client != nil {
 		return s.Client
 	}
-	return http.DefaultClient
+	return &http.Client{Timeout: DefaultHTTPTimeout}
 }
 
 // Fetch retrieves raw profile bytes from the configured endpoint.
@@ -63,20 +95,21 @@ func (s *PProfSource) Fetch(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		_ = resp.Body.Close()
 		return nil, fmt.Errorf("profile: pprof fetch %s: %s", s.URL, resp.Status)
 	}
 
-	data, readErr := io.ReadAll(resp.Body)
-	if closeErr := resp.Body.Close(); readErr == nil && closeErr != nil {
-		return nil, closeErr
+	max := s.maxProfileBytes()
+	limited := io.LimitReader(resp.Body, max+1)
+	data, err := io.ReadAll(limited)
+	if err != nil {
+		return nil, err
 	}
-	if readErr != nil {
-		return nil, readErr
+	if int64(len(data)) > max {
+		return nil, fmt.Errorf("%w: response exceeds %d bytes", ErrProfileTooLarge, max)
 	}
-
 	if len(data) == 0 {
 		return nil, ErrInvalidProfile
 	}
@@ -85,11 +118,28 @@ func (s *PProfSource) Fetch(ctx context.Context) ([]byte, error) {
 }
 
 // DefaultParser parses goroutine leak profiles.
-type DefaultParser struct{}
+type DefaultParser struct {
+	MaxSampleCount int // 0 = DefaultMaxSampleCount
+	MaxTotalCount  int // 0 = DefaultMaxTotalCount
+}
 
 // NewParser returns the default profile parser.
 func NewParser() *DefaultParser {
 	return &DefaultParser{}
+}
+
+func (p *DefaultParser) maxSampleCount() int {
+	if p.MaxSampleCount > 0 {
+		return p.MaxSampleCount
+	}
+	return DefaultMaxSampleCount
+}
+
+func (p *DefaultParser) maxTotalCount() int {
+	if p.MaxTotalCount > 0 {
+		return p.MaxTotalCount
+	}
+	return DefaultMaxTotalCount
 }
 
 // Parse converts raw bytes into a Profile.
@@ -103,10 +153,28 @@ func (p *DefaultParser) Parse(data []byte) (Profile, error) {
 		return Profile{}, fmt.Errorf("%w: %v", ErrInvalidProfile, err)
 	}
 
+	if !isGoroutineLeakProfile(prof) {
+		return Profile{}, ErrWrongProfileType
+	}
+
+	samples, err := samplesFromProfile(prof, p.maxSampleCount(), p.maxTotalCount())
+	if err != nil {
+		return Profile{}, err
+	}
+
 	return Profile{
 		CapturedAt: capturedAt(prof),
-		Goroutines: goroutinesFromProfile(prof),
+		Samples:    samples,
 	}, nil
+}
+
+func isGoroutineLeakProfile(prof *pprof.Profile) bool {
+	for _, st := range prof.SampleType {
+		if st != nil && st.Type == "goroutineleak" {
+			return true
+		}
+	}
+	return false
 }
 
 func capturedAt(prof *pprof.Profile) time.Time {
@@ -116,27 +184,35 @@ func capturedAt(prof *pprof.Profile) time.Time {
 	return time.Now().UTC()
 }
 
-
-func goroutinesFromProfile(prof *pprof.Profile) []Goroutine {
+func samplesFromProfile(prof *pprof.Profile, maxSampleCount, maxTotalCount int) ([]StackSample, error) {
 	if len(prof.Sample) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	var goroutines []Goroutine
+	var samples []StackSample
+	total := 0
 	for _, sample := range prof.Sample {
 		count := sampleCount(sample)
 		if count == 0 {
 			continue
 		}
+		if count > maxSampleCount {
+			return nil, fmt.Errorf("%w: sample count %d exceeds limit %d", ErrProfileTooLarge, count, maxSampleCount)
+		}
+
+		total += count
+		if total > maxTotalCount {
+			return nil, fmt.Errorf("%w: total count %d exceeds limit %d", ErrProfileTooLarge, total, maxTotalCount)
+		}
 
 		stack := stackFromSample(sample)
-
-		for i := 0; i < count; i++ {
-			goroutines = append(goroutines, Goroutine{Stack: stack})
-		}
+		samples = append(samples, StackSample{
+			Stack: stack,
+			Count: count,
+		})
 	}
 
-	return goroutines
+	return samples, nil
 }
 
 func sampleCount(sample *pprof.Sample) int {
@@ -150,7 +226,6 @@ func sampleCount(sample *pprof.Sample) int {
 
 	return int(sample.Value[0])
 }
-
 
 func stackFromSample(sample *pprof.Sample) []Frame {
 	var stack []Frame

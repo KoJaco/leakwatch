@@ -106,19 +106,18 @@ func TestFingerprintID_stable(t *testing.T) {
 	if id1 != id2 {
 		t.Fatalf("ids differ: %q vs %q", id1, id2)
 	}
-	if len(id1) != 8 {
-		t.Fatalf("id length: got %d, want 8", len(id1))
+	if len(id1) != 16 {
+		t.Fatalf("id length: got %d, want 16", len(id1))
 	}
 }
 
-func TestClusterGoroutines_groupsByStack(t *testing.T) {
+func TestClusterSamples_groupsByStack(t *testing.T) {
 	stack := channelLeakStack()
-	goroutines := []profile.Goroutine{
-		{Stack: stack},
-		{Stack: stack},
-		{Stack: append([]profile.Frame(nil), stack...)},
-	}
-	got := ClusterGoroutines(goroutines)
+	got := ClusterSamples([]profile.StackSample{
+		{Stack: stack, Count: 1},
+		{Stack: stack, Count: 1},
+		{Stack: append([]profile.Frame(nil), stack...), Count: 1},
+	})
 	if len(got) != 1 {
 		t.Fatalf("clusters: got %d, want 1", len(got))
 	}
@@ -133,15 +132,15 @@ func TestClusterGoroutines_groupsByStack(t *testing.T) {
 	}
 }
 
-func TestClusterGoroutines_separateStacks(t *testing.T) {
+func TestClusterSamples_separateStacks(t *testing.T) {
 	stackA := channelLeakStack()
 	stackB := append([]profile.Frame(nil), channelLeakStack()...)
 	stackB[2].Function = "main.otherLeak"
 
-	got := ClusterGoroutines([]profile.Goroutine{
-		{Stack: stackA},
-		{Stack: stackA},
-		{Stack: stackB},
+	got := ClusterSamples([]profile.StackSample{
+		{Stack: stackA, Count: 1},
+		{Stack: stackA, Count: 1},
+		{Stack: stackB, Count: 1},
 	})
 	if len(got) != 2 {
 		t.Fatalf("clusters: got %d, want 2", len(got))
@@ -154,16 +153,16 @@ func TestClusterGoroutines_separateStacks(t *testing.T) {
 	}
 }
 
-func TestClusterGoroutines_sortOrder(t *testing.T) {
+func TestClusterSamples_sortOrder(t *testing.T) {
 	stackA := channelLeakStack()
 	stackB := append([]profile.Frame(nil), channelLeakStack()...)
 	stackB[2].Function = "main.otherLeak"
 
-	got := ClusterGoroutines([]profile.Goroutine{
-		{Stack: stackB},
-		{Stack: stackA},
-		{Stack: stackA},
-		{Stack: stackA},
+	got := ClusterSamples([]profile.StackSample{
+		{Stack: stackB, Count: 1},
+		{Stack: stackA, Count: 1},
+		{Stack: stackA, Count: 1},
+		{Stack: stackA, Count: 1},
 	})
 	if len(got) != 2 {
 		t.Fatalf("clusters: got %d, want 2", len(got))
@@ -176,8 +175,8 @@ func TestClusterGoroutines_sortOrder(t *testing.T) {
 	}
 }
 
-func TestClusterGoroutines_empty(t *testing.T) {
-	if got := ClusterGoroutines(nil); got != nil {
+func TestClusterSamples_empty(t *testing.T) {
+	if got := ClusterSamples(nil); got != nil {
 		t.Fatalf("got %v, want nil", got)
 	}
 }
@@ -185,9 +184,8 @@ func TestClusterGoroutines_empty(t *testing.T) {
 func TestFingerprint_endToEnd(t *testing.T) {
 	stack := channelLeakStack()
 	prof := profile.Profile{
-		Goroutines: []profile.Goroutine{
-			{Stack: stack},
-			{Stack: stack},
+		Samples: []profile.StackSample{
+			{Stack: stack, Count: 2},
 		},
 	}
 

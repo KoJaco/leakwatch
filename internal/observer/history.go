@@ -1,6 +1,7 @@
 package observer
 
 import (
+	"sync"
 	"time"
 
 	"github.com/KoJaco/leakwatch/internal/domain"
@@ -10,6 +11,7 @@ import (
 type History struct {
 	capacity int
 	entries  []domain.Observation
+	mu       sync.RWMutex
 }
 
 // NewHistory returns an in-memory history with the given capacity.
@@ -22,6 +24,9 @@ func NewHistory(capacity int) *History {
 
 // Record appends an observation to history.
 func (h *History) Record(obs domain.Observation) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
 	if h.capacity > 0 && len(h.entries) >= h.capacity {
 		h.entries = h.entries[1:]
 	}
@@ -31,6 +36,9 @@ func (h *History) Record(obs domain.Observation) error {
 
 // Since returns observations captured at or after t.
 func (h *History) Since(t time.Time) []domain.Observation {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
 	var out []domain.Observation
 	for _, obs := range h.entries {
 		if !obs.CapturedAt.Before(t) {
@@ -42,6 +50,9 @@ func (h *History) Since(t time.Time) []domain.Observation {
 
 // Observations returns all retained observations.
 func (h *History) Observations() []domain.Observation {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
 	out := make([]domain.Observation, len(h.entries))
 	copy(out, h.entries)
 	return out

@@ -16,6 +16,10 @@ The scheduler (`internal/scheduler`) drives periodic sampling. It is started by
 | `WithInterval` | `5m` | Time between sample attempts |
 | `WithJitter` | `30s` | Random delay added before each sample |
 | `WithSampleGate` | `AlwaysAllow` | Predicate that can skip individual samples |
+| `WithHistoryCapacity` | `256` | Observations retained in memory |
+| `WithHTTPTimeout` | `30s` | Timeout for default pprof HTTP client |
+| `WithMaxProfileBytes` | `32 MiB` | Maximum pprof response body size |
+| `WithLogger` | `slog.Default()` | Logger for sample failures |
 
 ### Tick loop
 
@@ -28,9 +32,10 @@ On each tick:
 
 If `interval <= 0`, the scheduler returns immediately without sampling.
 
-If `Sample` returns an error, the scheduler **stops** and returns the error.
-The current `Watcher.Start` implementation discards this error (`_ = scheduler.Run(...)`).
-A future improvement may log and continue on transient fetch/parse failures.
+If `Sample` returns an error, the scheduler **logs a warning**, applies exponential
+backoff (starting at 1s, capped at the sampling interval or 5 minutes), and
+continues scheduling. Gate errors still stop the scheduler. Use
+`Watcher.LastSampleError()` to surface the most recent failure for health checks.
 
 ## Jitter
 
@@ -41,25 +46,18 @@ instant.
 ### Current implementation
 
 ```go
-jitter := time.Duration(int64(s.Jitter) * int64(time.Now().UnixNano()%100) / 100)
+jitter := time.Duration(rand.Int64N(int64(s.Jitter)))
 ```
 
-This scales `Jitter` by `UnixNano() % 100 / 100`, producing a value in
-`[0, jitter)`. The distribution is **not uniform** — values cluster toward
-lower durations because `UnixNano() % 100` is not a high-quality random source
-and the modulo range is small.
+This produces a uniform value in `[0, jitter)`.
 
 ### Caveats
 
 - **Not cryptographically random.** Acceptable for load spreading; do not use
   jitter timing for security-sensitive decisions.
-- **Correlated across replicas** started at the same wall-clock instant may
-  receive similar jitter values within the same second.
 - **Zero jitter** is valid and disables the delay entirely.
 - **Jitter is applied after the tick**, not added to the interval. Total time
   between samples is `interval + jitter_sleep`, not `interval ± jitter`.
-
-See the brainstorming notes on jitter improvements in a follow-up session.
 
 ## Sample gate
 

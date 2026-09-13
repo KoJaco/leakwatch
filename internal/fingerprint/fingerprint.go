@@ -13,7 +13,7 @@ type Location struct {
 
 // Fingerprint is stable machine identity — not human-readable attribution.
 type Fingerprint struct {
-	ID  string // e.g. "7f31c2a9"
+	ID  string // e.g. "1f246299e3674466"
 	Key string // canonical representation used to generate ID
 }
 
@@ -45,8 +45,8 @@ func NewFingerprinter() *DefaultFingerprinter {
 
 // Fingerprint clusters goroutines in the profile.
 func (f *DefaultFingerprinter) Fingerprint(p profile.Profile) ([]LeakCluster, error) {
-	if len(p.Goroutines) == 0 {
+	if len(p.Samples) == 0 {
 		return nil, nil
 	}
-	return ClusterGoroutines(p.Goroutines), nil
+	return ClusterSamples(p.Samples), nil
 }
