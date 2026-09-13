@@ -19,7 +19,7 @@ curl http://127.0.0.1:8080/
 
 ## Expected cluster
 
-- **ID:** `49380a07`
+- **ID:** `897206aadc79b7e6`
 - **Count:** varies with request count (fixture recorded with 5)
 - **Location:** `main.main.func1.1` in `main.go:16`
 

@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   goreleaser:
-    if: false # enable when ready for first release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

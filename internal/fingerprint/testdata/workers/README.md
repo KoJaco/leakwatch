@@ -15,7 +15,7 @@ Recorded from [`test/integration/workers`](../../../test/integration/workers/mai
 
 ## Expected cluster
 
-- **ID:** `27e9f2e8`
+- **ID:** `34314923ff52ce48`
 - **Count:** 40
 - **Location:** `main.workerLoop` in `main.go:14`
 

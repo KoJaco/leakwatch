@@ -228,21 +228,21 @@ stability.
 
 ### Release engineering
 
-- [ ] Enable GoReleaser in [`.github/workflows/release.yml`](../.github/workflows/release.yml) (`if: false` → remove or set true)
-- [ ] Wire CLI version via GoReleaser ldflags (`cmd/leakwatch/version.go` currently `"dev"`)
-- [ ] Cut [CHANGELOG.md](../CHANGELOG.md): move `[Unreleased]` → `[0.1.0] - YYYY-MM-DD`
+- [x] Enable GoReleaser in [`.github/workflows/release.yml`](../.github/workflows/release.yml) (`if: false` → remove or set true)
+- [x] Wire CLI version via GoReleaser ldflags (`cmd/leakwatch/version.go` currently `"dev"`)
+- [x] Cut [CHANGELOG.md](../CHANGELOG.md): move `[Unreleased]` → `[0.1.0] - YYYY-MM-DD`
 - [ ] Tag `v0.1.0` and verify `go get github.com/KoJaco/leakwatch@v0.1.0` resolves on pkg.go.dev
 
 ### Security and policy
 
-- [ ] Add `SECURITY.md` (reporting process; remind users about debug endpoint exposure)
-- [ ] Fix stale fixture/README references (e.g. `internal/fingerprint/testdata/grpc/README.md` leak_id)
+- [x] Add `SECURITY.md` (reporting process; remind users about debug endpoint exposure)
+- [x] Fix stale fixture/README references (e.g. `internal/fingerprint/testdata/grpc/README.md` leak_id)
 
 ### Documentation
 
-- [ ] Add README **Who should use this?** section: Go 1.27+, pprof enabled, sampling/GC tradeoffs
-- [ ] Fix README security example import (`httpexport` package)
-- [ ] Cross-check all docs for 16-char `leak_id` examples
+- [x] Add README **Who should use this?** section: Go 1.27+, pprof enabled, sampling/GC tradeoffs
+- [x] Fix README security example import (`httpexport` package)
+- [x] Cross-check all docs for 16-char `leak_id` examples
 
 ### Verification before tag
 
@@ -266,6 +266,13 @@ go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 - Monitors runtime-classified leaks only (see [limitations.md](limitations.md))
 - Each sample triggers leak-detection GC (see [sampling.md](sampling.md))
 - Debug endpoints expose stack traces — bind to loopback or use middleware
+
+### Handoff (owner, after merge)
+
+1. Validate in a production application (Watcher, Prometheus, debug handler).
+2. Tag and push: `git tag v0.1.0 && git push origin v0.1.0`
+3. Verify GoReleaser workflow, GitHub Release artifacts, and pkg.go.dev module resolution.
+4. Publish release notes from the `[0.1.0]` CHANGELOG section.
 
 ---
 

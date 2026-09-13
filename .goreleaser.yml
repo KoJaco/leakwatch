@@ -7,6 +7,9 @@ before:
 builds:
   - main: ./cmd/leakwatch
     binary: leakwatch
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
     goos:
       - linux
       - darwin
@@ -22,4 +25,4 @@ checksum:
   name_template: "checksums.txt"
 
 changelog:
-  sort: asc
+  disable: true
