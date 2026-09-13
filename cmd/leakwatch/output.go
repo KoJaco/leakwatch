@@ -9,16 +9,23 @@ import (
 	"github.com/KoJaco/leakwatch/internal/profile"
 )
 
-func parseFlags(args []string) (positional []string, jsonOut bool, err error) {
+type cliFlags struct {
+	jsonOut     bool
+	allowRemote bool
+}
+
+func parseFlags(args []string) (positional []string, flags cliFlags, err error) {
 	for _, arg := range args {
 		switch arg {
 		case "-json":
-			jsonOut = true
+			flags.jsonOut = true
+		case "--allow-remote":
+			flags.allowRemote = true
 		default:
 			positional = append(positional, arg)
 		}
 	}
-	return positional, jsonOut, nil
+	return positional, flags, nil
 }
 
 func writeSnapshot(w io.Writer, snap analysis.Snapshot, jsonOut bool) error {
@@ -73,6 +80,13 @@ func printLeak(w io.Writer, leak analysis.Leak) error {
 func printFrame(w io.Writer, frame profile.Frame) error {
 	_, err := fmt.Fprintf(w, "    %s (%s:%d)\n", frame.Function, frame.File, frame.Line)
 	return err
+}
+
+func validateInspectURL(url string, allowRemote bool) error {
+	if allowRemote || profile.IsLocalhostURL(url) {
+		return nil
+	}
+	return fmt.Errorf("leakwatch inspect: URL %q is not localhost; pass --allow-remote to fetch remote hosts", url)
 }
 
 const timeRFC3339 = "2006-01-02T15:04:05Z"

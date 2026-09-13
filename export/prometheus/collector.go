@@ -3,6 +3,7 @@ package promexport
 import (
 	"github.com/KoJaco/leakwatch/internal/analysis"
 	"github.com/KoJaco/leakwatch/internal/domain"
+	"github.com/KoJaco/leakwatch/internal/fingerprint"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -33,6 +34,11 @@ var (
 		"Growth rate per minute for the leak cluster (derived at scrape time).",
 		[]string{"leak_id"}, nil,
 	)
+	fingerprintVersionDesc = prometheus.NewDesc(
+		"goroutine_leak_fingerprint_version",
+		"Active stack fingerprint normalization version.",
+		nil, nil,
+	)
 )
 
 // Collector exposes goroutine leak metrics to Prometheus.
@@ -51,6 +57,7 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- leakCountDesc
 	ch <- leakFirstSeenDesc
 	ch <- leakGrowthRateDesc
+	ch <- fingerprintVersionDesc
 }
 
 // Collect implements prometheus.Collector.
@@ -62,6 +69,11 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		leakClustersDesc,
 		prometheus.GaugeValue,
 		float64(len(snap.Leaks)),
+	)
+	ch <- prometheus.MustNewConstMetric(
+		fingerprintVersionDesc,
+		prometheus.GaugeValue,
+		float64(fingerprint.FingerprintVersion),
 	)
 
 	for _, leak := range snap.Leaks {

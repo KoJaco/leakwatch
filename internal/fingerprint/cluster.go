@@ -1,8 +1,8 @@
 package fingerprint
 
 import (
-	"fmt"
-	"hash/fnv"
+	"crypto/sha256"
+	"encoding/hex"
 	"sort"
 	"strconv"
 	"strings"
@@ -10,15 +10,22 @@ import (
 	"github.com/KoJaco/leakwatch/internal/profile"
 )
 
-// ClusterGoroutines groups goroutines by normalized stack similarity.
-func ClusterGoroutines(goroutines []profile.Goroutine) []LeakCluster {
-	if len(goroutines) == 0 {
+// FingerprintVersion is incremented when normalization rules change incompatibly.
+const FingerprintVersion = 1
+
+// ClusterSamples groups stack samples by normalized stack similarity.
+func ClusterSamples(samples []profile.StackSample) []LeakCluster {
+	if len(samples) == 0 {
 		return nil
 	}
 
 	groups := make(map[string]*LeakCluster)
-	for _, g := range goroutines {
-		projected := ProjectStack(NormalizeStack(g.Stack))
+	for _, sample := range samples {
+		if sample.Count <= 0 {
+			continue
+		}
+
+		projected := ProjectStack(NormalizeStack(sample.Stack))
 		if len(projected) == 0 {
 			continue
 		}
@@ -38,7 +45,7 @@ func ClusterGoroutines(goroutines []profile.Goroutine) []LeakCluster {
 			}
 			groups[key] = cluster
 		}
-		cluster.Count++
+		cluster.Count += sample.Count
 	}
 	if len(groups) == 0 {
 		return nil
@@ -73,7 +80,6 @@ func stackKey(stack []profile.Frame) string {
 }
 
 func fingerprintID(key string) string {
-	h := fnv.New32a()
-	h.Write([]byte(key))
-	return fmt.Sprintf("%08x", h.Sum32())
+	sum := sha256.Sum256([]byte(key))
+	return hex.EncodeToString(sum[:8])
 }

@@ -20,7 +20,7 @@ Three distinct concepts serve different consumers:
 
 ```go
 type Fingerprint struct {
-    ID  string // e.g. "7f31c2a9"
+    ID  string // e.g. "1f246299e3674466"
     Key string // canonical representation used to generate ID
 }
 

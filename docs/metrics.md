@@ -24,6 +24,7 @@ reg.MustRegister(promexport.NewCollector(watcher))
 | `goroutine_leak_count` | Gauge | `leak_id` | Goroutine count per cluster |
 | `goroutine_leak_first_seen_timestamp` | Gauge | `leak_id` | Unix timestamp of first observation for this cluster |
 | `goroutine_leak_growth_rate` | Gauge | `leak_id` | Growth per minute, derived from observation history at scrape time |
+| `goroutine_leak_fingerprint_version` | Gauge | — | Active stack fingerprint normalization version (currently `1`) |
 
 All metrics are gauges — they reflect current state, not cumulative totals.
 
@@ -139,7 +140,7 @@ Use this to resolve `leak_id` from metrics to human-readable attribution.
 Example:
 
 ```sh
-curl -s http://localhost:6060/debug/leaks/7f31c2a9 | jq .
+curl -s http://localhost:6060/debug/leaks/1f246299e3674466 | jq .
 ```
 
 ## JSON export

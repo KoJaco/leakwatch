@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"context"
-	"os"
 
 	"github.com/KoJaco/leakwatch/internal/analysis"
 	"github.com/KoJaco/leakwatch/internal/collector"
@@ -13,7 +12,7 @@ import (
 
 // ProfileFromFile reads path and parses it with the default parser.
 func ProfileFromFile(path string) (profile.Profile, error) {
-	data, err := os.ReadFile(path)
+	data, err := profile.ReadBoundedFile(path, profile.DefaultMaxProfileBytes)
 	if err != nil {
 		return profile.Profile{}, err
 	}
@@ -21,8 +20,8 @@ func ProfileFromFile(path string) (profile.Profile, error) {
 }
 
 // ProfileFromURL fetches and parses a profile from a pprof HTTP endpoint.
-func ProfileFromURL(ctx context.Context, url string) (profile.Profile, error) {
-	col := collector.NewPProfCollector(profile.NewPProfSource(url), profile.NewParser())
+func ProfileFromURL(ctx context.Context, url string, opts ...profile.SourceOption) (profile.Profile, error) {
+	col := collector.NewPProfCollector(profile.NewPProfSource(url, opts...), profile.NewParser())
 	return col.Collect(ctx)
 }
 

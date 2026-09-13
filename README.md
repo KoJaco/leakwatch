@@ -46,9 +46,12 @@ leakwatch analyze profile.pb.gz
 # JSON output
 leakwatch analyze -json profile.pb.gz
 
-# Fetch and inspect a live pprof endpoint
-leakwatch inspect http://localhost:6060/debug/pprof/goroutineleak
+# Fetch and inspect a live pprof endpoint (localhost only by default)
+leakwatch inspect http://127.0.0.1:6060/debug/pprof/goroutineleak
 leakwatch inspect -json http://localhost:6060/debug/pprof/goroutineleak
+
+# Fetch a remote host explicitly
+leakwatch inspect --allow-remote https://staging.example/debug/pprof/goroutineleak
 ```
 
 ## Pipeline
@@ -71,6 +74,35 @@ Scheduler → Observer.Sample()
 | **Fingerprint** | Stable machine identity for a leak cluster |
 | **Observation** | Timestamped cluster counts — raw historical data |
 | **Leak** | Current interpreted state of a cluster |
+
+## Security
+
+The debug HTTP handler (`ServeDebug`) and Prometheus metrics expose goroutine
+stack traces and opaque `leak_id` labels. Treat them as sensitive operational
+data.
+
+- Bind debug and pprof endpoints to **loopback** (`127.0.0.1`) unless traffic is
+  restricted by network policy.
+- Never register `ServeDebug` on a public HTTP mux without protection. Wrap the
+  handler with middleware:
+
+```go
+auth := func(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w, r) {
+        if r.Header.Get("Authorization") != "Bearer "+token {
+            http.Error(w, "unauthorized", http.StatusUnauthorized)
+            return
+        }
+        next.ServeHTTP(w, r)
+    })
+}
+_ = watcher.ServeDebug("/debug/leaks", httpexport.WithMiddleware(auth))
+```
+
+- `leakwatch inspect` accepts **localhost URLs only** by default. Pass
+  `--allow-remote` to fetch other hosts (use only with trusted URLs).
+- Profile fetch uses bounded reads and HTTP timeouts (see `WithMaxProfileBytes`
+  and `WithHTTPTimeout`).
 
 ## Documentation
 

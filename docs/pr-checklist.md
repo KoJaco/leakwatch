@@ -217,6 +217,58 @@ checklists above. They should still:
 
 ---
 
+## Phase 8: Launch v0.1.0
+
+**Branch:** `chore/launch-v0.1.0`  
+**Depends on:** Audit hardening merged (`chore/audit-fixes`)
+
+First public release uses **Option A** posture: tag `v0.1.0`, not a stability
+commitment for v1.0.0. Validate in a real application before promoting API
+stability.
+
+### Release engineering
+
+- [ ] Enable GoReleaser in [`.github/workflows/release.yml`](../.github/workflows/release.yml) (`if: false` → remove or set true)
+- [ ] Wire CLI version via GoReleaser ldflags (`cmd/leakwatch/version.go` currently `"dev"`)
+- [ ] Cut [CHANGELOG.md](../CHANGELOG.md): move `[Unreleased]` → `[0.1.0] - YYYY-MM-DD`
+- [ ] Tag `v0.1.0` and verify `go get github.com/KoJaco/leakwatch@v0.1.0` resolves on pkg.go.dev
+
+### Security and policy
+
+- [ ] Add `SECURITY.md` (reporting process; remind users about debug endpoint exposure)
+- [ ] Fix stale fixture/README references (e.g. `internal/fingerprint/testdata/grpc/README.md` leak_id)
+
+### Documentation
+
+- [ ] Add README **Who should use this?** section: Go 1.27+, pprof enabled, sampling/GC tradeoffs
+- [ ] Fix README security example import (`httpexport` package)
+- [ ] Cross-check all docs for 16-char `leak_id` examples
+
+### Verification before tag
+
+```sh
+go vet ./...
+go test -race -count=1 ./...
+go test -race -tags integration -count=1 -timeout 5m ./test/...
+golangci-lint run
+go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+```
+
+### Manual validation
+
+- [ ] Run leakwatch in a production-like application (real pprof endpoint, Prometheus scrape, debug handler)
+- [ ] Confirm sampling interval and GC impact are acceptable under load
+- [ ] Confirm alert/query workflow with `goroutine_leak_*` metrics
+
+### Release notes (communicate clearly)
+
+- Requires Go 1.27+ and runtime `goroutineleak` pprof profile
+- Monitors runtime-classified leaks only (see [limitations.md](limitations.md))
+- Each sample triggers leak-detection GC (see [sampling.md](sampling.md))
+- Debug endpoints expose stack traces — bind to loopback or use middleware
+
+---
+
 ## Review focus by phase
 
 | Phase | Reviewer should verify |
@@ -228,3 +280,4 @@ checklists above. They should still:
 | 5 | CLI output matches HTTP debug handler for same snapshot |
 | 6 | Fixtures reproducible from documented recording steps |
 | 7 | E2E tests fail when fingerprinting/analysis is broken |
+| 8 | Release artifacts publish; docs match v0.1.0 posture |

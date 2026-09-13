@@ -20,7 +20,7 @@ Defined in `internal/profile`. Collected by `collector.Collector`.
 A stable machine identity for a leak cluster. Two goroutines with the same
 normalized stack belong to the same cluster and share a fingerprint.
 
-- `ID` — short hash used as `leak_id` in metrics and URLs (e.g. `7f31c2a9`)
+- `ID` — short hash used as `leak_id` in metrics and URLs (e.g. `1f246299e3674466`)
 - `Key` — canonical string representation used to generate the ID
 
 Fingerprints are **not** human-readable attribution. See [fingerprinting.md](fingerprinting.md).

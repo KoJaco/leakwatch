@@ -1,6 +1,7 @@
 package observer
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -65,6 +66,35 @@ func TestHistoryRecord_observationsCopy(t *testing.T) {
 	if h.Observations()[0].CapturedAt.Equal(base.Add(time.Hour)) {
 		t.Fatal("mutating returned slice affected stored history")
 	}
+}
+
+func TestHistory_concurrentRecordAndRead(t *testing.T) {
+	h := NewHistory(128)
+	base := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			for j := 0; j < 100; j++ {
+				_ = h.Observations()
+				_ = h.Since(base)
+			}
+		}(i)
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 100; i++ {
+			if err := h.Record(obsAt(base.Add(time.Duration(i)*time.Second), "id")); err != nil {
+				t.Errorf("Record: %v", err)
+			}
+		}
+	}()
+
+	wg.Wait()
 }
 
 func obsAt(at time.Time, id string) domain.Observation {

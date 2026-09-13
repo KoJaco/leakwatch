@@ -9,17 +9,23 @@ import (
 )
 
 func runInspect(args []string) int {
-	positional, jsonOut, err := parseFlags(args)
+	positional, flags, err := parseFlags(args)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
 	if len(positional) < 1 {
-		fmt.Fprintln(os.Stderr, "usage: leakwatch inspect [-json] <pprof-url>")
+		fmt.Fprintln(os.Stderr, "usage: leakwatch inspect [-json] [--allow-remote] <pprof-url>")
 		return 1
 	}
 
-	prof, err := pipeline.ProfileFromURL(context.Background(), positional[0])
+	url := positional[0]
+	if err := validateInspectURL(url, flags.allowRemote); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+
+	prof, err := pipeline.ProfileFromURL(context.Background(), url)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "leakwatch inspect: %v\n", err)
 		return 1
@@ -31,7 +37,7 @@ func runInspect(args []string) int {
 		return 1
 	}
 
-	if err := writeSnapshot(os.Stdout, snap, jsonOut); err != nil {
+	if err := writeSnapshot(os.Stdout, snap, flags.jsonOut); err != nil {
 		fmt.Fprintf(os.Stderr, "leakwatch inspect: %v\n", err)
 		return 1
 	}

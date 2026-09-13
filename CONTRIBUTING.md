@@ -64,11 +64,16 @@ Three layers — see [docs/architecture.md](docs/architecture.md#testing-strateg
 go run -tags integration ./test/integration/basic
 ```
 
-### End-to-end tests (planned)
+### End-to-end tests
 
-- Wire generators to a live `Watcher` and assert on `Snapshot()`.
-- Run in CI: `go test -tags integration -timeout 5m ./test/...`
-- See [docs/pr-checklist.md](docs/pr-checklist.md) phase 7.
+Implemented in [`test/e2e/`](../test/e2e/) with the `integration` build tag.
+Run in CI with race detection:
+
+```sh
+go test -race -tags integration -count=1 -timeout 5m ./test/...
+```
+
+See [docs/pr-checklist.md](docs/pr-checklist.md) phase 7.
 
 ## Implementation PRs
 
